@@ -9,7 +9,6 @@ using System.Xml.Serialization;
 using UL_PARSER.Application.Config;
 using UL_PARSER.Config.Application;
 using UL_PARSER.Devices.Common;
-using UL_PARSER.DTE;
 using static UL_PARSER.Devices.Common.Types;
 
 namespace UL_PARSER
@@ -24,14 +23,16 @@ namespace UL_PARSER
         {
             SetupEnvironment();
 
-            ConfigurationLoad();
-
             Console.WriteLine($"COMMANDS TO PROCESS = {commandResponseList.Count()}");
 
-            foreach (CommandResponse commandResponse in commandResponseList)
+            if (commandResponseList.Count() > 0)
             {
-                Logger.info($"COMMAND : {commandResponse.Command}");
-                Logger.info($"RESPONSE: {commandResponse.Response}");
+                Logger.info($"TEST CASE : *** [{configuration.ULTestCase}] ***");
+                foreach (CommandResponse commandResponse in commandResponseList)
+                {
+                    Logger.info($"COMMAND : {commandResponse.Command}");
+                    Logger.info($"RESPONSE: {commandResponse.Response}");
+                }
             }
         }
 
@@ -58,6 +59,9 @@ namespace UL_PARSER
             Console.WriteLine($"\r\n==========================================================================================");
             Console.WriteLine($"{Assembly.GetEntryAssembly().GetName().Name} - Version {Assembly.GetEntryAssembly().GetName().Version}");
             Console.WriteLine($"==========================================================================================\r\n");
+
+            // Data Group to Process
+            ConfigurationLoadDataGroup();
         }
 
         static void SetLogging()
@@ -94,19 +98,12 @@ namespace UL_PARSER
             }
         }
 
-        static void ConfigurationLoad()
+        public static void DeviceLogger(LogLevel logLevel, string message)
         {
-            // Get appsettings.json config.
-            IConfiguration configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables()
-                .Build();
-
-            // UL DATA GROUP
-            ULDataGroup();
+            Console.WriteLine($"[{logLevel}]: {message}");
         }
 
-        static void ULDataGroup()
+        static void ConfigurationLoadDataGroup()
         {
             // Capture all data in proper object
             commandResponseList = new List<CommandResponse>();
@@ -117,11 +114,6 @@ namespace UL_PARSER
                 XmlSerializer xs = new XmlSerializer(typeof(CommandResponse));
                 commandResponseList.Add((CommandResponse)xs.Deserialize(new StringReader(ulCommand.CommandResponse)));
             }
-        }
-
-        public static void DeviceLogger(LogLevel logLevel, string message)
-        {
-            Console.WriteLine($"[{logLevel}]: {message}");
         }
     }
 }
